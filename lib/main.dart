@@ -10,158 +10,147 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cadastro',
+      title: 'Lista e Login App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.blue,
       ),
-      home: const RegisterPage(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/list': (context) => const ListScreen(),
+      },
     );
   }
 }
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
-      String confirmPassword = _confirmPasswordController.text;
-
-      if (password == confirmPassword) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cadastro realizado com sucesso!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('As senhas não coincidem!')),
-        );
-      }
+  void _login() {
+    if (_emailController.text == 'admin@admin.com' &&
+        _passwordController.text == '12345') {
+      Navigator.pushNamed(
+        context,
+        '/list',
+        arguments: _nameController.text.isEmpty
+            ? 'Usuário'
+            : _nameController.text,
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Dados inválidos'),
+          content: const Text('Usuário e/ou senha incorreto(a)'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Não'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Sim'),
+            ),
+          ],
+        ),
+      );
     }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tela de Cadastro'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.8, // 80% da largura da tela
-              margin: const EdgeInsets.all(16.0), // Margem de 1em
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-                border: Border.all(
-                  color: Colors.grey.shade300,
-                  width: 1,
-                ),
+      appBar: AppBar(title: const Text('Tela de Login')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nome'),
               ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'Digite seu email',
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor, insira seu email';
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                          return 'Email inválido';
-                        }
-                        return null;
-                      },
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'E-mail'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Senha'),
+                obscureText: true,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _login,
+                child: const Text('Entrar'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ListScreen extends StatelessWidget {
+  const ListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final String name = ModalRoute.of(context)?.settings.arguments as String? ?? 'Usuário';
+    final List<String> items = List.generate(20, (index) => 'Item ${index + 1}');
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bem vindo(a), $name'),
+      ),
+      body: ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(items[index]),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Alerta'),
+                  content: Text('Você clicou no item ${index + 1}'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Não'),
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Senha',
-                        hintText: 'Digite sua senha',
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor, insira sua senha';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Confirmar Senha',
-                        hintText: 'Digite novamente sua senha',
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor, confirme sua senha';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'As senhas não coincidem';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      child: const Text('Cadastrar'),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        const Text('Já tem uma conta? '),
-                        TextButton(
-                          onPressed: () {
-                            // Ação ao pressionar o botão "Já tenho login"
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Navegar para login')),
-                            );
-                          },
-                          child: const Text('Entrar'),
-                        ),
-                      ],
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Sim'),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ),
-        ),
+              );
+            },
+          );
+        },
       ),
     );
   }
