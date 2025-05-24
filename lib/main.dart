@@ -25,18 +25,14 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  // Método para recuperar ou abrir o banco de dados
   _recuperarBD() async {
-    // Obtém o caminho onde o banco de dados será salvo no dispositivo
     final caminho = await getDatabasesPath();
     final local = join(caminho, "bancodados.db");
 
-    // Abre o banco de dados e cria a tabela 'usuarios' se ainda não existir
     var retorno = await openDatabase(
       local,
       version: 1,
       onCreate: (db, dbVersaoRecente) {
-        // SQL para criar a tabela 'usuarios' com colunas de ID, nome e idade
         String sql = "CREATE TABLE usuarios ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
             "nome VARCHAR, idade INTEGER)";
@@ -49,25 +45,19 @@ class _HomeState extends State<Home> {
     return retorno;
   }
 
-  // Método para inserir um novo usuário no banco de dados
   _salvarDados(BuildContext context, String nome, int idade) async {
     Database db = await _recuperarBD();
 
-    // Dados a serem inseridos, representados como um mapa
     Map<String, dynamic> dadosUsuario = {
       "nome": nome,
       "idade": idade,
     };
 
-    // Insere os dados na tabela 'usuarios' e retorna o ID do novo registro
     int id = await db.insert("usuarios", dadosUsuario);
     print("Salvo $id");
-
-    // Exibe um diálogo para o usuário confirmar que o registro foi salvo
     _mostrarDialogo(context, "Usuário salvo com sucesso!");
   }
 
-  // Método para exibir diálogos de confirmação e mensagens
   _mostrarDialogo(BuildContext context, String mensagem) {
     showDialog(
       context: context,
@@ -88,24 +78,20 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // Método para listar todos os usuários armazenados no banco de dados
   _listarUsuarios() async {
     Database db = await _recuperarBD();
     String sql = "SELECT * FROM usuarios";
     List usuarios = await db.rawQuery(sql);
 
-    // Imprime os dados de cada usuário listado no banco
     for (var usu in usuarios) {
       print(
           " id: ${usu['id'].toString()} nome: ${usu['nome']} idade: ${usu['idade']}");
     }
   }
 
-  // Método para listar um usuário específico com base no ID
   _listarUmUsuario(BuildContext context, int id) async {
     Database db = await _recuperarBD();
 
-    // Faz a consulta na tabela 'usuarios' com o ID fornecido
     List usuarios = await db.query(
       "usuarios",
       columns: ["id", "nome", "idade"],
@@ -113,7 +99,6 @@ class _HomeState extends State<Home> {
       whereArgs: [id],
     );
 
-    // Verifica se o usuário existe e exibe um diálogo com as informações
     if (usuarios.isNotEmpty) {
       var usuario = usuarios.first;
       _mostrarDialogo(context,
@@ -123,11 +108,9 @@ class _HomeState extends State<Home> {
     }
   }
 
-  // Método para excluir um usuário com base no ID
   _excluirUsuario(BuildContext context, int id) async {
     Database db = await _recuperarBD();
 
-    // Exclui o registro de acordo com o ID fornecido
     int retorno = await db.delete(
       "usuarios",
       where: "id = ?",
@@ -135,17 +118,13 @@ class _HomeState extends State<Home> {
     );
 
     print("Itens excluídos: $retorno");
-
-    // Exibe um diálogo para confirmar a exclusão
     _mostrarDialogo(context, "Usuário com ID $id excluído com sucesso.");
   }
 
-  // Método para atualizar informações de um usuário existente
   _atualizarUsuario(
       BuildContext context, int id, String? nome, int? idade) async {
     Database db = await _recuperarBD();
 
-    // Cria um mapa para atualizar os dados somente dos campos não nulos
     Map<String, dynamic> dadosUsuario = {};
     if (nome != null && nome.isNotEmpty) {
       dadosUsuario["nome"] = nome;
@@ -154,7 +133,6 @@ class _HomeState extends State<Home> {
       dadosUsuario["idade"] = idade;
     }
 
-    // Realiza a atualização caso existam campos para modificar
     if (dadosUsuario.isNotEmpty) {
       int retorno = await db.update(
         "usuarios",
